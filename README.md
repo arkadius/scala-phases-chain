@@ -20,4 +20,4 @@ val result = progress.run(123)
 More
 ====
 
-For future reading take a look at blog post: http://blog.ingensol.pl/2014/08/multi-phased-processing-in-scala.html
+For further reading take a look at blog post: http://blog.ingensol.pl/2014/08/multi-phased-processing-in-scala.html
