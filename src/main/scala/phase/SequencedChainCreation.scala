@@ -16,7 +16,7 @@ private[phase] trait SequencedChainCreation {
   private class SequencedChain[In, Out](seq: Seq[PhasesChain[In, Out]])
     extends PhasesChain[In, Seq[Out]] {
 
-    private[phase] def processWithProgress(progress: MultiPhasedProgress[_, _]): (In) => Seq[Out] = { in: In =>
+    private[phase] def processWithProgress(progress: MultiPhasedProgress): (In) => Seq[Out] = { in: In =>
       seq.map { phase =>
         phase.processWithProgress(progress)(in)
       }
@@ -28,7 +28,7 @@ private[phase] trait SequencedChainCreation {
   private class SequencedChain2[In, OutA, OutB](a: PhasesChain[In, OutA], b: PhasesChain[In, OutB])
     extends PhasesChain[In, (OutA, OutB)] {
 
-    private[phase] def processWithProgress(progress: MultiPhasedProgress[_, _]): (In) => (OutA, OutB) = { in: In =>
+    private[phase] def processWithProgress(progress: MultiPhasedProgress): (In) => (OutA, OutB) = { in: In =>
       val aResult = a.processWithProgress(progress)(in)
       val bResult = b.processWithProgress(progress)(in)
       (aResult, bResult)
@@ -40,7 +40,7 @@ private[phase] trait SequencedChainCreation {
   private class SequencedChain3[In, OutA, OutB, OutC](a: PhasesChain[In, OutA], b: PhasesChain[In, OutB], c: PhasesChain[In, OutC])
     extends PhasesChain[In, (OutA, OutB, OutC)] {
 
-    private[phase] def processWithProgress(progress: MultiPhasedProgress[_, _]): (In) => (OutA, OutB, OutC) = { in: In =>
+    private[phase] def processWithProgress(progress: MultiPhasedProgress): (In) => (OutA, OutB, OutC) = { in: In =>
       val aResult = a.processWithProgress(progress)(in)
       val bResult = b.processWithProgress(progress)(in)
       val cResult = c.processWithProgress(progress)(in)

@@ -11,7 +11,7 @@ private[phase] trait ChainTransformation[-In, +Out] { self: PhasesChain[In, Out]
 }
 
 private[phase] class ChainWithTransformedIn[-NewIn, -In, +Out](chain: PhasesChain[In, Out], transformIn: NewIn => In) extends PhasesChain[NewIn, Out] {
-  private[phase] def processWithProgress(progress: MultiPhasedProgress[_, _]): NewIn => Out = { newIn =>
+  private[phase] def processWithProgress(progress: MultiPhasedProgress): NewIn => Out = { newIn =>
     val in = transformIn(newIn)
     chain.processWithProgress(progress)(in)
   }
@@ -20,7 +20,7 @@ private[phase] class ChainWithTransformedIn[-NewIn, -In, +Out](chain: PhasesChai
 }
 
 private[phase] class ChainWithTransformedOut[-In, +Out, +NewOut](chain: PhasesChain[In, Out], transformOut: Out => NewOut) extends PhasesChain[In, NewOut] {
-  private[phase] def processWithProgress(progress: MultiPhasedProgress[_, _]): In => NewOut = { in =>
+  private[phase] def processWithProgress(progress: MultiPhasedProgress): In => NewOut = { in =>
     val out = chain.processWithProgress(progress)(in)
     transformOut(out)
   }
@@ -29,7 +29,7 @@ private[phase] class ChainWithTransformedOut[-In, +Out, +NewOut](chain: PhasesCh
 }
 
 private[phase] class WrappingChain[-NewIn, In, +Out, +NewOut](chain: PhasesChain[In, Out], wrap: NewIn => (In => Out) => NewOut) extends PhasesChain[NewIn, NewOut] {
-  private[phase] def processWithProgress(progress: MultiPhasedProgress[_, _]): NewIn => NewOut = { in =>
+  private[phase] def processWithProgress(progress: MultiPhasedProgress): NewIn => NewOut = { in =>
     wrap(in)(chain.processWithProgress(progress))
   }
 

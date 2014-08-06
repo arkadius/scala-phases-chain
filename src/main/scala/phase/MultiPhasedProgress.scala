@@ -1,15 +1,9 @@
 package phase
 
-class MultiPhasedProgress[-In, +Out](phasesChain: PhasesChain[In, Out]) {
+class MultiPhasedProgress(phasesCount: Int) {
 
-  private var progressState = ProgressState(phasesChain.phasesCount)
+  private var progressState = ProgressState(phasesCount)
   notifyAboutStatus()
-
-  def run(in: In): Out = {
-    val result = phasesChain.run(this)(in)
-    finish(result)
-    result
-  }
 
   private[phase] def moveProgress(phasesCount: Int) {
     (1 to phasesCount).foreach(_ => endPhase())
@@ -32,7 +26,7 @@ class MultiPhasedProgress[-In, +Out](phasesChain: PhasesChain[In, Out]) {
     notifyAboutStatus()
   }
 
-  protected def finish(result: Any) {
+  private[phase] def finish(result: Any) {
     progressState = progressState.finish(result)
     notifyAboutStatus()
   }
@@ -41,4 +35,19 @@ class MultiPhasedProgress[-In, +Out](phasesChain: PhasesChain[In, Out]) {
     println(s"PROGRESS: ${progressState.status}")
   }
 
+}
+
+class ChainRunner[-In, +Out](chain: PhasesChain[In, Out], progress: MultiPhasedProgress) {
+  def run(in: In): Out = {
+    val result = chain.run(progress)(in)
+    progress.finish(result)
+    result
+  }
+}
+
+object ChainRunner {
+  def apply[In, Out](chain: PhasesChain[In, Out]): ChainRunner[In, Out] = {
+    val progress = new MultiPhasedProgress(chain.phasesCount)
+    new ChainRunner(chain, progress)
+  }
 }

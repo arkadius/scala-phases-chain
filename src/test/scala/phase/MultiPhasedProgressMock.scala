@@ -1,6 +1,6 @@
 package phase
 
-class MultiPhasedProgressMock[-In, +Out](_chain: PhasesChain[In, Out]) extends MultiPhasedProgress(_chain) {
+class MultiPhasedProgressMock(phasesCount: Int) extends MultiPhasedProgress(phasesCount) {
 
   var movedProgresses = 0
   private var _phasesIns  = List[String]()

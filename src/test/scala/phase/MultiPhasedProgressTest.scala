@@ -10,8 +10,8 @@ class MultiPhasedProgressTest extends FlatSpec with Matchers {
       Phase("Validation") { data: PreparedData => ValidatedData(data) } ::
       Phase("Execution") { data: ValidatedData => Result(data) } :: NilChain()
 
-    val progress = new MultiPhasedProgress(chain)
-    val result = progress.run(123)
+    val runner = ChainRunner(chain)
+    val result = runner.run(123)
 
     result shouldEqual Result(ValidatedData(PreparedData(123)))
   }
