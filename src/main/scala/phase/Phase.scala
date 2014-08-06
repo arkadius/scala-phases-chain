@@ -58,9 +58,9 @@ private[phase] class ChainedPhasesChain[-In, Mid, +Out](prev: PhasesChain[In, Mi
 
 }
 case class NilChain[T]() extends PhasesChain[T, T] {
-  override def processWithProgress(progress: MultiPhasedProgress): T => T = in => in
+  def processWithProgress(progress: MultiPhasedProgress): T => T = in => in
 
-  override val phasesCount = 0
+  val phasesCount = 0
 }
 
 trait SinglePhaseChain[-In, +Out] extends PhasesChain[In, Out] {
