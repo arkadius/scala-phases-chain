@@ -20,6 +20,8 @@ val result = runner.run(123)
 ```
 
 ## Using akka actor
+Take a look at [ProgressActorTest.scala](https://github.com/arkadius/scala-phases-chain/blob/master/src/test/scala/phase/ProgressActorTest.scala). Below snippet of it:
+
 ```scala
 val service = new BackgroundService[Unit] {
   override def start(request: Unit, progressActor: ActorRef): Unit = {
