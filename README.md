@@ -1,6 +1,8 @@
 scala-phases-chain
 ==================
 
+[![Build Status](https://travis-ci.org/arkadius/scala-phases-chain.svg?branch=master)](https://travis-ci.org/arkadius/scala-phases-chain)
+
 Small lib for handling multi-phased processing in scala. You can build your chain of phases and after this you can run this chain with Progress runner. Progress can notify about state of operation e.g. akka actor or simply print it to logs.
 
 # Examples
