@@ -51,13 +51,13 @@ private[phase] class ChainedValidatingPhasesChain[-In, MidF, MidS, +OutS](prev: 
 
 }
 
-case class EmptyValidatingChain[S]() extends ValidatingPhasesChain[S, Nothing, S] {
+private[phase] case class EmptyValidatingChain[S]() extends ValidatingPhasesChain[S, Nothing, S] {
   def processWithProgress(progress: MultiPhasedProgress): S => Validation[Nothing, S] = in => in.success
 
   val phasesDetails = Nil
 }
 
-private[phase] trait SingleValidatingPhaseChain[-In, +OutF, +OutS] extends ValidatingPhasesChain[In, OutF, OutS] {
+trait SingleValidatingPhaseChain[-In, +OutF, +OutS] extends ValidatingPhasesChain[In, OutF, OutS] {
   val name: String
   def process(in: In): Validation[OutF, OutS]
   private lazy val details = PhaseDetails(name)
@@ -67,7 +67,9 @@ private[phase] trait SingleValidatingPhaseChain[-In, +OutF, +OutS] extends Valid
   def phasesDetails = List(details)
 }
 
-object SingleValidatingPhaseChain {
+object ValidatingPhasesChain {
+  def empty[S]: ValidatingPhasesChain[S, Nothing, S] = EmptyValidatingChain()
+  
   def apply[In, OutF, OutS](n: String)
                            (proc: In => Validation[OutF, OutS]): ValidatingPhasesChain[In, OutF, OutS] =
     new SingleValidatingPhaseChain[In, OutF, OutS] {

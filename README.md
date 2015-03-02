@@ -11,9 +11,9 @@ Small lib for handling multi-phased processing in scala. You can build your chai
 
 ```scala
 val chain =
-  SinglePhasesChain("Preparation") { in: Int => PreparedData(in) } ::
-  SinglePhasesChain("Validation") { data: PreparedData => ValidatedData(data) } ::
-  SinglePhasesChain("Execution") { data: ValidatedData => Result(data) }
+  PhasesChain("Preparation") { in: Int => PreparedData(in) } ::
+  PhasesChain("Validation") { data: PreparedData => ValidatedData(data) } ::
+  PhasesChain("Execution") { data: ValidatedData => Result(data) }
  
 val runner = new ChainRunner(chain, progress)
 val result = runner.run(123)

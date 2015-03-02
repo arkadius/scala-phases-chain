@@ -49,13 +49,13 @@ private[phase] class ChainedPhasesChain[-In, Mid, +Out](prev: PhasesChain[In, Mi
 
 }
 
-case class EmptyChain[T]() extends PhasesChain[T, T] {
+private[phase] case class EmptyChain[T]() extends PhasesChain[T, T] {
   def processWithProgress(progress: MultiPhasedProgress): T => T = in => in
 
   val phasesDetails = Nil
 }
 
-private[phase] trait SinglePhaseChain[-In, +Out] extends PhasesChain[In, Out] {
+trait SinglePhaseChain[-In, +Out] extends PhasesChain[In, Out] {
   val name: String
   def process(in: In): Out
   private lazy val details = PhaseDetails(name)
@@ -65,14 +65,14 @@ private[phase] trait SinglePhaseChain[-In, +Out] extends PhasesChain[In, Out] {
   def phasesDetails = List(details)
 }
 
-object SinglePhaseChain {
+object PhasesChain extends SplitterChainCreation {
+  def empty[T]: PhasesChain[T, T] = EmptyChain()
+
   def apply[In, Out](n: String)
                     (proc: In => Out): PhasesChain[In, Out] = new SinglePhaseChain[In, Out] {
     val name: String = n
     def process(in: In): Out = proc(in)
   }
 }
-
-object PhasesChain extends SplitterChainCreation
 
 private[phase] case class PhaseDetails(name: String)

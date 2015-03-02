@@ -58,7 +58,7 @@ class WaitingPhase(val i: Int) {
 
   private var locked: Boolean = true
 
-  def chain: PhasesChain[Any, Int] = SinglePhaseChain(i.toString) { _ =>
+  def chain: PhasesChain[Any, Int] = PhasesChain(i.toString) { _ =>
     WaitingPhase.this.synchronized {
       while (locked) {
         WaitingPhase.this.wait()

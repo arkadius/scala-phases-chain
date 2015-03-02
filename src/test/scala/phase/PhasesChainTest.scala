@@ -42,7 +42,7 @@ class PhasesChainTest extends fixture.FunSpec with Matchers {
   describe("Simple Phase") {
     it ("should work single") { run =>
       var arg: Int = -1
-      val single = SinglePhaseChain("single") {(i:Int) => arg = i; 1}
+      val single = PhasesChain("single") {(i:Int) => arg = i; 1}
       single.phasesCount shouldBe 1
 
       val result = run(single, 0)
@@ -55,9 +55,9 @@ class PhasesChainTest extends fixture.FunSpec with Matchers {
     it ("should work for chain") { run =>
       var args = Map[String, Any]()
       val chained =
-        SinglePhaseChain("p1") { (arg:Int) => args += "p1" -> arg; 1} ::
-          SinglePhaseChain("p2") { (arg:Int) => args += "p2" -> arg; 2} ::
-          SinglePhaseChain("p3") { (arg:Int) => args += "p3" -> arg; 3}
+        PhasesChain("p1") { (arg:Int) => args += "p1" -> arg; 1} ::
+          PhasesChain("p2") { (arg:Int) => args += "p2" -> arg; 2} ::
+          PhasesChain("p3") { (arg:Int) => args += "p3" -> arg; 3}
       chained.phasesCount shouldBe 3
 
       val result = run(chained, 0)
@@ -70,7 +70,7 @@ class PhasesChainTest extends fixture.FunSpec with Matchers {
     }
 
     it ("should do nothing for nil phase") { run =>
-      val empty = EmptyChain[Int]()
+      val empty = PhasesChain.empty[Int]
       empty.phasesCount shouldBe 0
 
       val result = run(empty, 0)
@@ -83,7 +83,7 @@ class PhasesChainTest extends fixture.FunSpec with Matchers {
   describe("Validating Phase") {
     it ("should work single") { run =>
       var arg: Int = -1
-      val single = SingleValidatingPhaseChain("single") {(i:Int) => arg = i; 1.success }
+      val single = ValidatingPhasesChain("single") {(i:Int) => arg = i; 1.success }
       single.phasesCount shouldBe 1
 
       val result = run(single, 0)
@@ -96,9 +96,9 @@ class PhasesChainTest extends fixture.FunSpec with Matchers {
     it ("should work for chain") { run =>
       var args = Map[String, Any]()
       val chained =
-        SingleValidatingPhaseChain("p1") { (arg:Int) => args += "p1" -> arg; 1.success} ::
-          SingleValidatingPhaseChain("p2") { (arg:Int) => args += "p2" -> arg; 2.success} ::
-          SingleValidatingPhaseChain("p3") { (arg:Int) => args += "p3" -> arg; 3.success}
+        ValidatingPhasesChain("p1") { (arg:Int) => args += "p1" -> arg; 1.success} ::
+          ValidatingPhasesChain("p2") { (arg:Int) => args += "p2" -> arg; 2.success} ::
+          ValidatingPhasesChain("p3") { (arg:Int) => args += "p3" -> arg; 3.success}
       chained.phasesCount shouldBe 3
 
       val result = run(chained, 0)
@@ -113,11 +113,11 @@ class PhasesChainTest extends fixture.FunSpec with Matchers {
     it ("should break the chain if failure occurs") { run =>
       var args = Map[String, Any]()
       val chained =
-        SingleValidatingPhaseChain("p1") { (arg:Int) => args += "p1" -> arg; 1.success} ::
-          SingleValidatingPhaseChain("p2") { (arg:Int) => args += "p2" -> arg; "breaking".failure} ::
-          SingleValidatingPhaseChain("p3") { (arg:Int) => args += "p3" -> arg; 3.success} ::
-          SingleValidatingPhaseChain("p4") { (arg:Int) => args += "p4" -> arg; 4.success} ::
-          SingleValidatingPhaseChain("p5") { (arg:Int) => args += "p5" -> arg; 5.success}
+        ValidatingPhasesChain("p1") { (arg:Int) => args += "p1" -> arg; 1.success} ::
+          ValidatingPhasesChain("p2") { (arg:Int) => args += "p2" -> arg; "breaking".failure} ::
+          ValidatingPhasesChain("p3") { (arg:Int) => args += "p3" -> arg; 3.success} ::
+          ValidatingPhasesChain("p4") { (arg:Int) => args += "p4" -> arg; 4.success} ::
+          ValidatingPhasesChain("p5") { (arg:Int) => args += "p5" -> arg; 5.success}
       chained.phasesCount shouldBe 5
 
       val result = run(chained, 0)
@@ -133,7 +133,7 @@ class PhasesChainTest extends fixture.FunSpec with Matchers {
     }
 
     it ("should do nothing for nil phase") { run =>
-      val empty = EmptyValidatingChain[Int]()
+      val empty = ValidatingPhasesChain.empty[Int]
       empty.phasesCount shouldBe 0
 
       val result = run(empty, 0)
@@ -147,12 +147,12 @@ class PhasesChainTest extends fixture.FunSpec with Matchers {
     it ("should proper move") { run =>
       var args = Map[String, Any]()
       val chainedValidating =
-        SingleValidatingPhaseChain("p1") { (arg:Int) => args += "p1" -> arg; 1.success} ::
-          SingleValidatingPhaseChain("p2") { (arg:Int) => args += "p2" -> arg; "breaking".failure} ::
-          SingleValidatingPhaseChain("p3") { (arg:Int) => args += "p3" -> arg; 3.success}
+        ValidatingPhasesChain("p1") { (arg:Int) => args += "p1" -> arg; 1.success} ::
+          ValidatingPhasesChain("p2") { (arg:Int) => args += "p2" -> arg; "breaking".failure} ::
+          ValidatingPhasesChain("p3") { (arg:Int) => args += "p3" -> arg; 3.success}
       val chainedAll =
         chainedValidating ::
-          SinglePhaseChain("p4") { (arg: Validation[String, Int]) => args += "p4" -> arg; arg valueOr { _ => -1 }}
+          PhasesChain("p4") { (arg: Validation[String, Int]) => args += "p4" -> arg; arg valueOr { _ => -1 }}
       chainedAll.phasesCount shouldBe 4
 
       val result = run(chainedAll, 0)
