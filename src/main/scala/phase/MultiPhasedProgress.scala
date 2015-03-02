@@ -1,40 +1,64 @@
+/*
+ * Copyright 2015 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package phase
 
-class MultiPhasedProgress(phasesCount: Int) {
+import akka.actor.ActorRef
 
-  private var progressState = ProgressState(phasesCount)
-  notifyAboutStatus()
+abstract class MultiPhasedProgress {
 
-  private[phase] def moveProgress(phasesCount: Int) {
-    (1 to phasesCount).foreach(_ => endPhase())
+  private[phase] def skipPhases(phases: Seq[PhaseDetails]) {
+    phases.foreach(skipPhase)
   }
 
-  private[phase] def inPhase[T](phaseName: String)(action: => T): T = {
-    beginPhase(phaseName)
+  protected def skipPhase(phaseDetails: PhaseDetails) {
+    beginPhase(phaseDetails)
+    endPhase(phaseDetails)
+  }
+
+  private[phase] def inPhase[T](phaseDetails: PhaseDetails)(action: => T): T = {
+    beginPhase(phaseDetails)
     val result = action
-    endPhase()
+    endPhase(phaseDetails)
     result
   }
-  
-  private def beginPhase(phaseName: String) {
-    progressState = progressState.beginPhase(phaseName)
-    notifyAboutStatus()
+
+  protected def beginPhase(phaseDetails: PhaseDetails)
+
+  protected def endPhase(phaseDetails: PhaseDetails)
+
+  private[phase] def finish(result: Any)
+
+}
+
+private[phase] class NotifyingActorProgress(progressActor: ActorRef, phasesDetails: Seq[PhaseDetails])
+  extends MultiPhasedProgress  {
+
+  progressActor ! Init(phasesDetails)
+
+  protected def beginPhase(phaseDetails: PhaseDetails) {
+    progressActor ! BeginPhase(phaseDetails)
   }
 
-  private def endPhase() {
-    progressState = progressState.endPhase
-    notifyAboutStatus()
+  protected def endPhase(phaseDetails: PhaseDetails) {
+    progressActor ! EndPhase(phaseDetails)
   }
 
   private[phase] def finish(result: Any) {
-    progressState = progressState.finish(result)
-    notifyAboutStatus()
+    progressActor ! Finish(result)
   }
-
-  private def notifyAboutStatus() {
-    println(s"PROGRESS: ${progressState.status}")
-  }
-
 }
 
 class ChainRunner[-In, +Out](chain: PhasesChain[In, Out], progress: MultiPhasedProgress) {
@@ -46,8 +70,8 @@ class ChainRunner[-In, +Out](chain: PhasesChain[In, Out], progress: MultiPhasedP
 }
 
 object ChainRunner {
-  def apply[In, Out](chain: PhasesChain[In, Out]): ChainRunner[In, Out] = {
-    val progress = new MultiPhasedProgress(chain.phasesCount)
+  def actorBased[In, Out](chain: PhasesChain[In, Out], progressActor: ActorRef): ChainRunner[In, Out] = {
+    val progress = new NotifyingActorProgress(progressActor, chain.phasesDetails)
     new ChainRunner(chain, progress)
   }
 }

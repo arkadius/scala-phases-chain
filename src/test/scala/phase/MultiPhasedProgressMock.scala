@@ -1,6 +1,21 @@
+/*
+ * Copyright 2015 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package phase
 
-class MultiPhasedProgressMock(phasesCount: Int) extends MultiPhasedProgress(phasesCount) {
+class MultiPhasedProgressMock extends MultiPhasedProgress {
 
   var movedProgresses = 0
   private var _phasesIns  = List[String]()
@@ -8,16 +23,18 @@ class MultiPhasedProgressMock(phasesCount: Int) extends MultiPhasedProgress(phas
   def phasesIns  = _phasesIns.reverse
   def phasesOuts = _phasesOuts.reverse
 
-  override def moveProgress(phasesCount: Int) = {
-    movedProgresses += phasesCount
-    super.moveProgress(phasesCount)
+  override protected def skipPhase(phaseDetails: PhaseDetails): Unit = {
+    movedProgresses += 1
   }
 
-  override def inPhase[T](phaseName: String)(action: => T): T = {
-    _phasesIns  = phaseName :: _phasesIns
-    val result = super.inPhase(phaseName)(action)
-    _phasesOuts = phaseName :: _phasesOuts
-    result
+  override protected def beginPhase(phaseDetails: PhaseDetails): Unit = {
+    _phasesIns  = phaseDetails.name :: _phasesIns
   }
+
+  override protected def endPhase(phaseDetails: PhaseDetails): Unit = {
+    _phasesOuts = phaseDetails.name :: _phasesOuts
+  }
+
+  override private[phase] def finish(result: Any): Unit = {}
 
 }
